@@ -202,21 +202,16 @@ app.post('/api/chat', async (req, res) => {
     // 搜索相关知识
     const relevant = searchKnowledge(message);
 
-    // 把知识库内容直接放在用户消息前面，让 AI 无法忽略
+    // 知识库内容直接作为用户消息的一部分
     let augmentedMessage = message;
     if (relevant.length > 0) {
-        const facts = relevant.map(c => c.text.substring(0, 2000)).join('\n\n---\n\n');
-        augmentedMessage = `[系统指令：以下是从该用户的历史聊天记录中搜索到的相关资料，你必须基于这些资料来回答用户的问题。如果资料中有用户的个人信息（专业、工作、经历等），直接引用并回答。如果资料不相关，可以忽略。]\n\n${facts}\n\n---\n\n用户的问题：${message}`;
+        const facts = relevant.slice(0, 3).map(c => c.text.substring(0, 2000)).join('\n');
+        augmentedMessage = `（背景知识：以下是从该用户历史聊天中找到的相关信息——\n${facts}\n）\n\n请用上面的背景知识回答：${message}`;
     }
 
-    const systemPrompt = '你是一个了解用户的 AI 助手。请根据用户消息中提供的资料来回答。回答要自然、贴心。如果没有足够信息，如实说不知道。';
-
     const messages = [
-        { role: 'system', content: systemPrompt },
-        ...(history || []).slice(-20).map(m => ({
-            role: m.role,
-            content: m.role === 'user' ? m.content : `[回答] ${m.content.substring(0, 1000)}`
-        })),
+        { role: 'system', content: '你是一个了解用户的助手。用背景知识回答，简洁自然。' },
+        ...(history || []).slice(-10),
         { role: 'user', content: augmentedMessage }
     ];
 
