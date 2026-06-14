@@ -205,11 +205,17 @@ app.post('/api/chat', async (req, res) => {
         ? relevant.map(c => `【${c.title}】\n${c.text.substring(0, 1500)}`).join('\n\n')
         : '暂无直接相关的历史记录。';
 
-    const systemPrompt = `你是一个深度了解用户的 AI 助手。以下是该用户的聊天记录（按相关度排序）：
+    const systemPrompt = `你是一个深度了解用户的 AI 助手。
+
+## 用户背景资料（从历史聊天中提取，按相关度排序）
 
 ${contextStr}
 
-请基于以上信息来回答。回答要自然、贴心。`;
+## 指令
+
+请基于以上用户背景资料来回答他的问题。如果背景资料明确提到了相关信息（如用户的专业、工作、经历、性格等），你必须直接引用并基于这些信息回答。如果背景资料没有足够信息，你可以如实说不知道。回答要自然、贴心，像老朋友一样。
+
+关键：用户问"你了解我吗"或"你知道我什么"之类的问题时，请从背景资料中提取关于用户的关键信息进行回应。`;
 
     const messages = [
         { role: 'system', content: systemPrompt },
@@ -328,6 +334,18 @@ app.get('/api/export', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=deepseek_knowledge_backup.json');
     res.json(exportData);
+});
+
+// 搜索测试（调试用）
+app.post('/api/search', (req, res) => {
+    const { query } = req.body;
+    if (!query) return res.json({ results: [] });
+    const results = searchKnowledge(query);
+    res.json({
+        query,
+        count: results.length,
+        results: results.map(r => ({ title: r.title, score: r.score, preview: r.text.substring(0, 200) }))
+    });
 });
 
 // 健康检查
