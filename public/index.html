@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DeepSeek 知识助手</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部栏 -->
+        <header id="header">
+            <div class="header-left">
+                <button id="menuBtn" class="icon-btn">☰</button>
+            </div>
+            <div class="header-center">
+                <h1>DeepSeek 知识助手</h1>
+                <span id="statusDot" class="status-dot"></span>
+            </div>
+            <div class="header-right">
+                <button id="clearBtn" class="icon-btn" title="清空对话">🗑️</button>
+            </div>
+        </header>
+
+        <!-- 聊天区域 -->
+        <main id="chatArea">
+            <div id="welcome" class="welcome">
+                <div class="welcome-icon">🧠</div>
+                <h2>你好，我了解你</h2>
+                <p>我已读取你的全部 DeepSeek 聊天记录，<br>可以基于对你的了解来回答问题。</p>
+                <div class="welcome-stats" id="welcomeStats">
+                    <span>加载知识库中...</span>
+                </div>
+                <div class="welcome-tips">
+                    <p>💡 试试问：</p>
+                    <button class="tip-btn" data-msg="根据你对我的了解，分析一下我的性格特点">分析我的性格</button>
+                    <button class="tip-btn" data-msg="帮我梳理一下我的职业规划建议">职业规划建议</button>
+                    <button class="tip-btn" data-msg="回顾我们的对话，我最大的成长点是什么">我的成长点</button>
+                </div>
+            </div>
+            <div id="messages"></div>
+        </main>
+
+        <!-- 输入区域 -->
+        <footer id="inputArea">
+            <div class="input-wrapper">
+                <textarea id="chatInput" rows="1" placeholder="输入你的问题..." enterkeyhint="send"></textarea>
+                <button id="sendBtn" class="send-btn" disabled>发送</button>
+            </div>
+            <div class="input-footer">
+                <span id="modelInfo">加载中...</span>
+                <button id="settingsBtn" class="text-btn">设置</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="close-btn" id="closeSettings">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>AI 后端</label>
+                    <select id="providerSelect">
+                        <option value="deepseek">DeepSeek API</option>
+                        <option value="ollama">Ollama（本地）</option>
+                        <option value="openai">OpenAI 兼容</option>
+                    </select>
+                </div>
+                <div id="deepseekConfig" class="provider-config">
+                    <div class="form-group">
+                        <label>DeepSeek API Key</label>
+                        <div class="input-with-btn">
+                            <input type="password" id="apiKeyInput" placeholder="sk-...">
+                            <button id="toggleKeyBtn" class="small-btn">显示</button>
+                        </div>
+                        <p class="help-text">从 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 获取</p>
+                    </div>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <select id="modelSelect">
+                            <option value="deepseek-chat">deepseek-chat</option>
+                            <option value="deepseek-reasoner">deepseek-reasoner</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ollamaConfig" class="provider-config hidden">
+                    <div class="form-group">
+                        <label>Ollama 地址</label>
+                        <input type="text" id="ollamaUrlInput" placeholder="http://localhost:11434/api/chat">
+                    </div>
+                    <div class="form-group">
+                        <label>模型名称</label>
+                        <input type="text" id="ollamaModelInput" placeholder="deepseek-r1:7b">
+                    </div>
+                    <p class="help-text">确保 Ollama 已安装并正在运行</p>
+                </div>
+                <div id="openaiConfig" class="provider-config hidden">
+                    <div class="form-group">
+                        <label>API 地址</label>
+                        <input type="text" id="openaiUrlInput" placeholder="https://api.openai.com/v1/chat/completions">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" id="openaiKeyInput" placeholder="sk-...">
+                    </div>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <input type="text" id="openaiModelInput" placeholder="gpt-4o">
+                    </div>
+                </div>
+                <button id="saveSettingsBtn" class="primary-btn">保存设置</button>
+                <p id="saveStatus" class="save-status"></p>
+            </div>
+            <div class="modal-footer">
+                <span class="footer-info">知识库: <span id="kbInfo">-</span> 段 · 对话: <span id="chatCount">-</span> 条</span>
+                <button id="exportBtn" class="text-btn" style="font-size:12px;">📥 导出数据</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
