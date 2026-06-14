@@ -201,26 +201,23 @@ app.post('/api/chat', async (req, res) => {
 
     // 搜索相关知识
     const relevant = searchKnowledge(message);
-    const contextStr = relevant.length > 0
-        ? relevant.map(c => `【${c.title}】\n${c.text.substring(0, 1500)}`).join('\n\n')
-        : '暂无直接相关的历史记录。';
 
-    const systemPrompt = `你是一个深度了解用户的 AI 助手。
+    // 把知识库内容直接放在用户消息前面，让 AI 无法忽略
+    let augmentedMessage = message;
+    if (relevant.length > 0) {
+        const facts = relevant.map(c => c.text.substring(0, 2000)).join('\n\n---\n\n');
+        augmentedMessage = `[系统指令：以下是从该用户的历史聊天记录中搜索到的相关资料，你必须基于这些资料来回答用户的问题。如果资料中有用户的个人信息（专业、工作、经历等），直接引用并回答。如果资料不相关，可以忽略。]\n\n${facts}\n\n---\n\n用户的问题：${message}`;
+    }
 
-## 用户背景资料（从历史聊天中提取，按相关度排序）
-
-${contextStr}
-
-## 指令
-
-请基于以上用户背景资料来回答他的问题。如果背景资料明确提到了相关信息（如用户的专业、工作、经历、性格等），你必须直接引用并基于这些信息回答。如果背景资料没有足够信息，你可以如实说不知道。回答要自然、贴心，像老朋友一样。
-
-关键：用户问"你了解我吗"或"你知道我什么"之类的问题时，请从背景资料中提取关于用户的关键信息进行回应。`;
+    const systemPrompt = '你是一个了解用户的 AI 助手。请根据用户消息中提供的资料来回答。回答要自然、贴心。如果没有足够信息，如实说不知道。';
 
     const messages = [
         { role: 'system', content: systemPrompt },
-        ...(history || []).slice(-30),
-        { role: 'user', content: message }
+        ...(history || []).slice(-20).map(m => ({
+            role: m.role,
+            content: m.role === 'user' ? m.content : `[回答] ${m.content.substring(0, 1000)}`
+        })),
+        { role: 'user', content: augmentedMessage }
     ];
 
     try {
